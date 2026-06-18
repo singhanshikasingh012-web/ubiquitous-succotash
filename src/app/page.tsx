@@ -408,15 +408,15 @@ export default function Home() {
   return (
     <main className="relative min-h-screen overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
       <div className="absolute inset-0 grain" />
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-4">
-        <header className="paper-surface rounded-[1.5rem] p-4 sm:p-5">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-4">
+        <header className="paper-surface w-full rounded-[1.5rem] p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">Private notes</p>
               <h1 className="display-font mt-2 text-4xl leading-none text-[#395156] sm:text-5xl">Quiet Notes</h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex max-w-full flex-wrap items-center gap-2">
               {SIDE_OPTIONS.map((side) => (
                 <button
                   key={side}
@@ -438,8 +438,8 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="paper-surface rounded-[1.5rem] p-4 sm:p-5">
-          <form className="grid gap-3" onSubmit={createQuestion}>
+        <section className="paper-surface w-full rounded-[1.5rem] p-4 sm:p-5">
+          <form className="grid w-full min-w-0 gap-3" onSubmit={createQuestion}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">New note</p>
               <span className="text-sm text-[#5f6f6f]">{mySide ? `Writing as ${mySide}` : "Pick a side first"}</span>
@@ -465,7 +465,7 @@ export default function Home() {
           </form>
         </section>
 
-        <section className="paper-surface rounded-[1.5rem] p-4 sm:p-5">
+        <section className="paper-surface w-full rounded-[1.5rem] p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">Conversation</p>
@@ -489,7 +489,7 @@ export default function Home() {
               const isAnswered = Boolean(thread.answerText || thread.attachmentData);
 
               return (
-                <article key={thread.id} className="paper-surface-strong overflow-hidden rounded-[1.5rem] p-4 sm:p-5">
+                <article key={thread.id} className="paper-surface-strong w-full min-w-0 overflow-hidden rounded-[1.5rem] p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="text-xs uppercase tracking-[0.28em] text-[#71827f]">{thread.askedBy}</div>
@@ -497,7 +497,7 @@ export default function Home() {
                         {thread.question}
                       </h3>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
+                    <div className="flex shrink-0 flex-col items-end gap-2 max-w-full">
                       <div className="rounded-full bg-[rgba(160,160,131,0.18)] px-3 py-1 text-xs font-medium text-[#5f6f6f]">
                         {formatTimeSince(thread.createdAt)}
                       </div>
@@ -567,25 +567,6 @@ export default function Home() {
                       </div>
 
                       <div className="mt-4 grid gap-4">
-                        <select
-                          className="soft-input rounded-2xl px-4 py-3 text-base"
-                          value={draft.type}
-                          onChange={(event) =>
-                            setDrafts((current) => ({
-                              ...current,
-                              [thread.id]: {
-                                ...draft,
-                                type: event.target.value as AnswerDraft["type"],
-                              },
-                            }))
-                          }
-                        >
-                          <option value="text">Text</option>
-                          <option value="photo">Photo</option>
-                          <option value="voice">Voice note</option>
-                          <option value="note">Mixed</option>
-                        </select>
-
                         <textarea
                           className="soft-input min-h-24 rounded-[1.25rem] px-4 py-4 text-base leading-7"
                           placeholder="Write back when you want to."
