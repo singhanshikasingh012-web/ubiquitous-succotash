@@ -175,3 +175,70 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const threadId = request.nextUrl.searchParams.get("id")?.trim();
+  const kind = request.nextUrl.searchParams.get("kind")?.trim();
+  const roomCode = normalizeRoomCode(request.nextUrl.searchParams.get("room") ?? "");
+
+  if (!threadId || !kind || !roomCode) {
+    return NextResponse.json(
+      { error: "Thread id, kind, and room code are required." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+
+    if (kind === "question") {
+      const { error } = await supabase
+        .from("question_threads")
+        .delete()
+        .eq("id", threadId)
+        .eq("room_code", roomCode);
+
+      if (error) {
+        throw error;
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (kind === "answer") {
+      const { data, error } = await supabase
+        .from("question_threads")
+        .update({
+          answered_by: null,
+          answer_text: null,
+          answer_type: null,
+          answer_attachment_name: null,
+          answer_attachment_type: null,
+          answer_attachment_data: null,
+          answered_at: null,
+        })
+        .eq("id", threadId)
+        .eq("room_code", roomCode)
+        .select("*")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return NextResponse.json({ thread: toThread(data as ThreadRow) });
+    }
+
+    return NextResponse.json({ error: "Unsupported delete action." }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to delete this entry. Check your Supabase settings.",
+      },
+      { status: 500 },
+    );
+  }
+}
