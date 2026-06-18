@@ -586,15 +586,17 @@ export default function Home() {
                           <label className="text-sm font-medium text-[#4d6a6d]" htmlFor={`attachment-${thread.id}`}>
                             Add a photo or video
                           </label>
-                          <input
+                         <div className="w-full min-w-0 overflow-hidden">
+                            <input
                             id={`attachment-${thread.id}`}
-                            className="soft-input rounded-2xl px-4 py-3 text-sm"
+                            className="soft-input block w-full min-w-0 max-w-full rounded-2xl px-4 py-3 text-sm"
                             type="file"
                             accept="image/*,video/*"
                             onChange={async (event) => {
-                              await handleAttachmentChange(thread.id, event.target.files?.[0] ?? null);
+                            await handleAttachmentChange(thread.id, event.target.files?.[0] ?? null);
                             }}
-                          />
+                            />
+                        </div>
                           {draft.attachmentName ? (
                             <div className="break-words text-sm text-[#5f6f6f]">
                               Attached: {draft.attachmentName} {draft.attachmentSizeLabel ? `(${draft.attachmentSizeLabel})` : ""}
