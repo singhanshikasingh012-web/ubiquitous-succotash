@@ -361,12 +361,15 @@ export default function Home() {
       <main className="relative flex min-h-screen items-center justify-center px-4 py-10">
         <div className="absolute inset-0 grain" />
         <div className="paper-surface relative z-10 w-full max-w-xl rounded-[2rem] p-8 sm:p-10">
+          <div className="inline-flex rounded-full border border-[rgba(77,106,109,0.18)] bg-[#fffaf3] px-3 py-1 text-xs uppercase tracking-[0.28em] text-[#6f7f7c]">
+            For Anshika and Aarav
+          </div>
           <div className="display-font text-4xl leading-none text-[#405558] sm:text-5xl">
             Quiet Questions
           </div>
           <p className="mt-4 max-w-lg text-sm leading-7 text-[#5f6f6f] sm:text-base">
             A soft, shared room for you and Aarav to leave thoughtful questions, answer them later,
-            and revisit the little moments in between.
+            and keep a private trail of care, curiosity, and trust.
           </p>
 
           <form className="mt-8 grid gap-4" onSubmit={submitRoomGate}>
@@ -422,10 +425,11 @@ export default function Home() {
         <section className="paper-surface rounded-[2rem] p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">For Anshika and Aarav</p>
               <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">Private shared room</p>
               <h1 className="display-font mt-3 text-5xl leading-[0.9] text-[#395156] sm:text-6xl">
                 Rain outside.
-                <br /> Warm lights inside.
+                <br /> Warm light inside.
               </h1>
             </div>
             <div className="paper-surface-strong rounded-3xl px-4 py-3 text-right text-sm text-[#4d6a6d]">
@@ -451,13 +455,28 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="mt-6 grid gap-3 rounded-[2rem] border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] p-5 sm:grid-cols-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">First</div>
+              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Ask something gentle, strange, or honest.</p>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Then</div>
+              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Reply when the day slows down and feels safe.</p>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Finally</div>
+              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Attach a photo, voice note, or tiny memory to keep.</p>
+            </div>
+          </div>
+
           <form className="paper-surface-strong mt-6 rounded-[2rem] p-5 sm:p-6" onSubmit={createQuestion}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">Ask a new question</p>
-                <h2 className="display-font mt-1 text-3xl text-[#395156]">Leave a little lantern for later</h2>
+                <h2 className="display-font mt-1 text-3xl text-[#395156]">Leave a quiet little lantern for Aarav</h2>
               </div>
-              <div className="text-sm text-[#5f6f6f]">Saved for the room, not just this device.</div>
+              <div className="text-sm text-[#5f6f6f]">Saved for the room, not just this device, so the feeling stays close.</div>
             </div>
 
             <div className="mt-5 grid gap-4">
@@ -507,7 +526,7 @@ export default function Home() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">Timeline</p>
-              <h2 className="display-font mt-1 text-4xl text-[#395156]">A slow unfolding</h2>
+              <h2 className="display-font mt-1 text-4xl text-[#395156]">A slow unfolding of two hearts</h2>
             </div>
             <button
               type="button"
@@ -522,7 +541,7 @@ export default function Home() {
           </div>
 
           <div className="mt-4 rounded-3xl border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] px-4 py-3 text-sm text-[#5f6f6f]">
-            {loading ? "Listening for new questions and answers..." : "Auto-refreshes every 15 seconds."}
+            {loading ? "Listening for new questions and answers..." : "Auto-refreshes every 15 seconds, like a quiet return."}
           </div>
 
           {apiMessage ? (
@@ -534,7 +553,7 @@ export default function Home() {
           <div className="mt-5 grid gap-4">
             {threads.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-[rgba(77,106,109,0.22)] bg-[rgba(255,250,243,0.65)] p-6 text-sm leading-7 text-[#61716f]">
-                There is no answer yet. Ask the first question, then let the room fill slowly.
+                There is no answer yet. Leave the first note, and let the room bloom slowly.
               </div>
             ) : null}
 
@@ -575,7 +594,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="mt-4 rounded-[1.5rem] border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] p-4">
-                      <div className="text-sm font-medium text-[#4d6a6d]">Answer it from here</div>
+                      <div className="text-sm font-medium text-[#4d6a6d]">Answer it from here, softly</div>
                       <div className="mt-4 grid gap-4">
                         <div className="grid gap-2 sm:grid-cols-2">
                           <input
@@ -606,7 +625,7 @@ export default function Home() {
                             }
                           >
                             <option value="text">Text answer</option>
-                            <option value="photo">Photo answer</option>
+                            <option value="photo">Photo memory</option>
                             <option value="voice">Voice note</option>
                             <option value="note">Mixed note</option>
                           </select>
@@ -629,7 +648,7 @@ export default function Home() {
 
                         <div className="grid gap-2">
                           <label className="text-sm font-medium text-[#4d6a6d]" htmlFor={`attachment-${thread.id}`}>
-                            Add a picture, audio clip, or video
+                            Add a picture, audio clip, or video memory
                           </label>
                           <input
                             id={`attachment-${thread.id}`}
