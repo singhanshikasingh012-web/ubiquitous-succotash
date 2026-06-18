@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 type Thread = {
   id: string;
@@ -18,7 +18,6 @@ type Thread = {
 };
 
 type AnswerDraft = {
-  responder: string;
   text: string;
   type: "text" | "photo" | "voice" | "note";
   attachmentName: string;
@@ -28,7 +27,6 @@ type AnswerDraft = {
 };
 
 const defaultAnswerDraft = (): AnswerDraft => ({
-  responder: "",
   text: "",
   type: "text",
   attachmentName: "",
@@ -36,6 +34,8 @@ const defaultAnswerDraft = (): AnswerDraft => ({
   attachmentData: "",
   attachmentSizeLabel: "",
 });
+
+const SIDE_OPTIONS = ["Anshika", "Aarav"] as const;
 
 function normalizeRoomCode(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
@@ -137,24 +137,39 @@ function MediaPreview({
 export default function Home() {
   const [roomInput, setRoomInput] = useState("");
   const [roomCode, setRoomCode] = useState("");
-  const [myName, setMyName] = useState("");
+  const [mySide, setMySide] = useState<(typeof SIDE_OPTIONS)[number] | "">("");
   const [question, setQuestion] = useState("");
-  const [questioner, setQuestioner] = useState("");
   const [threads, setThreads] = useState<Thread[]>([]);
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({});
   const [loading, setLoading] = useState(false);
   const [savingQuestion, setSavingQuestion] = useState(false);
-  const [banner, setBanner] = useState<string | null>(null);
-  const [apiMessage, setApiMessage] = useState<string | null>(null);
+  const [recordingThreadId, setRecordingThreadId] = useState<string | null>(null);
+
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   useEffect(() => {
     const savedRoom = window.localStorage.getItem("quiet-questions-room") ?? "";
-    const savedName = window.localStorage.getItem("quiet-questions-name") ?? "";
+    const savedSide = window.localStorage.getItem("quiet-questions-side") ?? "";
     setRoomInput(savedRoom);
     setRoomCode(savedRoom);
-    setMyName(savedName);
-    setQuestioner(savedName);
+    setMySide(savedSide === "Anshika" || savedSide === "Aarav" ? savedSide : "");
   }, []);
+
+  useEffect(() => {
+    if (recordingThreadId === null) {
+      setRecordingSeconds(0);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setRecordingSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [recordingThreadId]);
 
   useEffect(() => {
     if (!roomCode) {
@@ -165,7 +180,6 @@ export default function Home() {
 
     const loadThreads = async () => {
       setLoading(true);
-      setApiMessage(null);
 
       try {
         const response = await fetch(`/api/threads?room=${encodeURIComponent(roomCode)}`);
@@ -177,10 +191,6 @@ export default function Home() {
 
         if (active) {
           setThreads(payload.threads ?? []);
-        }
-      } catch (error) {
-        if (active) {
-          setApiMessage(error instanceof Error ? error.message : "Unable to connect right now.");
         }
       } finally {
         if (active) {
@@ -209,39 +219,26 @@ export default function Home() {
     event.preventDefault();
 
     const normalizedRoom = normalizeRoomCode(roomInput);
-    const normalizedName = myName.trim();
+    const normalizedSide = mySide;
 
-    if (!normalizedRoom || !normalizedName) {
-      setBanner("Add a room code and your name to enter the shared space.");
+    if (!normalizedRoom || !normalizedSide) {
       return;
     }
 
     window.localStorage.setItem("quiet-questions-room", normalizedRoom);
-    window.localStorage.setItem("quiet-questions-name", normalizedName);
+    window.localStorage.setItem("quiet-questions-side", normalizedSide);
     setRoomCode(normalizedRoom);
-    setMyName(normalizedName);
-    setQuestioner(normalizedName);
-    setBanner(null);
   }
 
   async function createQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!roomCode) {
-      setBanner("Choose a room first.");
-      return;
-    }
-
     const trimmedQuestion = question.trim();
-    const trimmedQuestioner = questioner.trim() || myName.trim();
-
-    if (!trimmedQuestion || !trimmedQuestioner) {
-      setBanner("Please add both a name and a question.");
+    if (!roomCode || !trimmedQuestion || !mySide) {
       return;
     }
 
     setSavingQuestion(true);
-    setBanner(null);
 
     try {
       const response = await fetch("/api/threads", {
@@ -250,7 +247,7 @@ export default function Home() {
         body: JSON.stringify({
           action: "question",
           roomCode,
-          askedBy: trimmedQuestioner,
+          askedBy: mySide,
           question: trimmedQuestion,
         }),
       });
@@ -265,9 +262,6 @@ export default function Home() {
         setThreads((current) => [savedThread, ...current]);
       }
       setQuestion("");
-      setQuestioner(trimmedQuestioner);
-    } catch (error) {
-      setBanner(error instanceof Error ? error.message : "Could not save that question.");
     } finally {
       setSavingQuestion(false);
     }
@@ -276,20 +270,10 @@ export default function Home() {
   async function submitAnswer(threadId: string) {
     const draft = drafts[threadId] ?? defaultAnswerDraft();
 
-    if (!roomCode) {
-      setBanner("Choose a room first.");
-      return;
-    }
-
     const text = draft.text.trim();
-    const responder = draft.responder.trim() || myName.trim();
-
-    if (!responder || (!text && !draft.attachmentData)) {
-      setBanner("Add your name plus text or media to answer.");
+    if (!roomCode || (!text && !draft.attachmentData) || !mySide) {
       return;
     }
-
-    setBanner(null);
 
     try {
       const response = await fetch("/api/threads", {
@@ -299,7 +283,7 @@ export default function Home() {
           action: "answer",
           roomCode,
           id: threadId,
-          answeredBy: responder,
+          answeredBy: mySide,
           answerText: text,
           answerType: draft.type,
           attachmentName: draft.attachmentName || null,
@@ -322,8 +306,8 @@ export default function Home() {
         ...current,
         [threadId]: defaultAnswerDraft(),
       }));
-    } catch (error) {
-      setBanner(error instanceof Error ? error.message : "Could not save that answer.");
+    } catch {
+      return;
     }
   }
 
@@ -337,7 +321,6 @@ export default function Home() {
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      setBanner("Please keep attachments under 8 MB so the room stays fast.");
       return;
     }
 
@@ -351,9 +334,63 @@ export default function Home() {
         attachmentType: file.type,
         attachmentData: dataUrl,
         attachmentSizeLabel: `${(file.size / 1024 / 1024).toFixed(file.size < 1024 * 1024 ? 1 : 2)} MB`,
-        responder: current[threadId]?.responder || myName,
       },
     }));
+  }
+
+  async function startVoiceRecording(threadId: string) {
+    if (recordingThreadId !== null || !navigator.mediaDevices?.getUserMedia) {
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result ?? ""));
+          reader.readAsDataURL(blob);
+        });
+
+        setDrafts((current) => ({
+          ...current,
+          [threadId]: {
+            ...(current[threadId] ?? defaultAnswerDraft()),
+            type: "voice",
+            attachmentName: "voice-note.webm",
+            attachmentType: blob.type || "audio/webm",
+            attachmentData: dataUrl,
+            attachmentSizeLabel: `${(blob.size / 1024 / 1024).toFixed(blob.size < 1024 * 1024 ? 1 : 2)} MB`,
+          },
+        }));
+
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        recorderRef.current = null;
+        setRecordingThreadId(null);
+      };
+
+      streamRef.current = stream;
+      recorderRef.current = recorder;
+      setRecordingThreadId(threadId);
+      recorder.start();
+    } catch {
+      return;
+    }
+  }
+
+  function stopVoiceRecording() {
+    recorderRef.current?.stop();
   }
 
   if (!roomCode) {
@@ -386,27 +423,30 @@ export default function Home() {
               />
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-medium text-[#4d6a6d]" htmlFor="your-name">
-                Your name
-              </label>
-              <input
-                id="your-name"
-                className="soft-input rounded-2xl px-4 py-3 text-base"
-                placeholder="Your name"
-                value={myName}
-                onChange={(event) => setMyName(event.target.value)}
-              />
-            </div>
-            {banner ? (
-              <div className="rounded-2xl border border-[#c9ada1]/50 bg-[#fff8f0] px-4 py-3 text-sm text-[#7a4f45]">
-                {banner}
+              <div className="text-sm font-medium text-[#4d6a6d]">Choose your side</div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {SIDE_OPTIONS.map((side) => (
+                  <button
+                    key={side}
+                    type="button"
+                    onClick={() => setMySide(side)}
+                    className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                      mySide === side
+                        ? "border-[#4d6a6d] bg-[#4d6a6d] text-[#fffaf3]"
+                        : "border-[rgba(77,106,109,0.2)] bg-[#fffaf3] text-[#405558]"
+                    }`}
+                  >
+                    {side}
+                  </button>
+                ))}
               </div>
-            ) : null}
+            </div>
             <button
               type="submit"
-              className="rounded-2xl bg-[#4d6a6d] px-5 py-3 text-sm font-semibold text-[#fffaf3] transition hover:translate-y-[-1px] hover:bg-[#40585b]"
+              disabled={!roomInput || !mySide}
+              className="rounded-2xl bg-[#4d6a6d] px-5 py-3 text-sm font-semibold text-[#fffaf3] transition hover:translate-y-[-1px] hover:bg-[#40585b] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Enter the shared room
+              Enter the room
             </button>
           </form>
         </div>
@@ -425,11 +465,11 @@ export default function Home() {
         <section className="paper-surface rounded-[2rem] p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">For Anshika and Aarav</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">{mySide || "Room"}</p>
               <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">Private shared room</p>
               <h1 className="display-font mt-3 text-5xl leading-[0.9] text-[#395156] sm:text-6xl">
-                Rain outside.
-                <br /> Warm light inside.
+                Quiet notes.
+                <br /> Warm room.
               </h1>
             </div>
             <div className="paper-surface-strong rounded-3xl px-4 py-3 text-right text-sm text-[#4d6a6d]">
@@ -474,24 +514,11 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">Ask a new question</p>
-                <h2 className="display-font mt-1 text-3xl text-[#395156]">Leave a note for Aarav</h2>
+                <h2 className="display-font mt-1 text-3xl text-[#395156]">Leave a note</h2>
               </div>
-              <div className="text-sm text-[#5f6f6f]">It stays with the room, so you can pick it up later.</div>
             </div>
 
             <div className="mt-5 grid gap-4">
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-[#4d6a6d]" htmlFor="questioner">
-                  Your name
-                </label>
-                <input
-                  id="questioner"
-                  className="soft-input rounded-2xl px-4 py-3 text-base"
-                  value={questioner}
-                  onChange={(event) => setQuestioner(event.target.value)}
-                  placeholder="Your name"
-                />
-              </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-[#4d6a6d]" htmlFor="question">
                   Question
@@ -506,15 +533,9 @@ export default function Home() {
               </div>
             </div>
 
-            {banner ? (
-              <div className="mt-4 rounded-2xl border border-[#c9ada1]/50 bg-[#fff8f0] px-4 py-3 text-sm text-[#7a4f45]">
-                {banner}
-              </div>
-            ) : null}
-
             <button
               type="submit"
-              disabled={savingQuestion}
+              disabled={savingQuestion || !question.trim()}
               className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#4d6a6d] px-5 py-3 text-sm font-semibold text-[#fffaf3] transition hover:translate-y-[-1px] hover:bg-[#40585b] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {savingQuestion ? "Saving..." : "Add note"}
@@ -533,7 +554,6 @@ export default function Home() {
               className="rounded-full border border-[rgba(77,106,109,0.18)] bg-[#fffaf3] px-4 py-2 text-sm text-[#4d6a6d]"
               onClick={() => {
                 setRoomCode("");
-                setBanner(null);
               }}
             >
               Switch room
@@ -543,12 +563,6 @@ export default function Home() {
           <div className="mt-4 rounded-3xl border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] px-4 py-3 text-sm text-[#5f6f6f]">
             {loading ? "Checking for new notes..." : "Updates every 15 seconds."}
           </div>
-
-          {apiMessage ? (
-            <div className="mt-4 rounded-3xl border border-[#c9ada1]/50 bg-[#fff8f0] px-4 py-3 text-sm text-[#7a4f45]">
-              {apiMessage}
-            </div>
-          ) : null}
 
           <div className="mt-5 grid gap-4">
             {threads.length === 0 ? (
@@ -597,20 +611,6 @@ export default function Home() {
                       <div className="text-sm font-medium text-[#4d6a6d]">Reply here</div>
                       <div className="mt-4 grid gap-4">
                         <div className="grid gap-2 sm:grid-cols-2">
-                          <input
-                            className="soft-input rounded-2xl px-4 py-3 text-base"
-                            placeholder="Your name"
-                            value={draft.responder}
-                            onChange={(event) =>
-                              setDrafts((current) => ({
-                                ...current,
-                                [thread.id]: {
-                                  ...draft,
-                                  responder: event.target.value,
-                                },
-                              }))
-                            }
-                          />
                           <select
                             className="soft-input rounded-2xl px-4 py-3 text-base"
                             value={draft.type}
@@ -626,9 +626,28 @@ export default function Home() {
                           >
                             <option value="text">Text</option>
                             <option value="photo">Photo</option>
-                            <option value="voice">Voice</option>
+                            <option value="voice">Voice note</option>
                             <option value="note">Mixed</option>
                           </select>
+                          <button
+                            type="button"
+                            className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                              recordingThreadId === thread.id
+                                ? "bg-[#4d6a6d] text-[#fffaf3]"
+                                : "border border-[rgba(77,106,109,0.2)] bg-[#fffaf3] text-[#405558]"
+                            }`}
+                            onClick={() => {
+                              if (recordingThreadId === thread.id) {
+                                stopVoiceRecording();
+                              } else {
+                                void startVoiceRecording(thread.id);
+                              }
+                            }}
+                          >
+                            {recordingThreadId === thread.id
+                              ? `Stop recording ${recordingSeconds}s`
+                              : "Record voice note"}
+                          </button>
                         </div>
 
                         <textarea
@@ -648,13 +667,13 @@ export default function Home() {
 
                         <div className="grid gap-2">
                           <label className="text-sm font-medium text-[#4d6a6d]" htmlFor={`attachment-${thread.id}`}>
-                            Add a photo, voice note, or video
+                            Add a photo or video
                           </label>
                           <input
                             id={`attachment-${thread.id}`}
                             className="soft-input rounded-2xl px-4 py-3 text-sm"
                             type="file"
-                            accept="image/*,audio/*,video/*"
+                            accept="image/*,video/*"
                             onChange={async (event) => {
                               await handleAttachmentChange(thread.id, event.target.files?.[0] ?? null);
                             }}
