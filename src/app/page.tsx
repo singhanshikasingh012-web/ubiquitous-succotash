@@ -411,10 +411,7 @@ export default function Home() {
       <div className="relative z-10 mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-4">
         <header className="paper-surface w-full rounded-[1.5rem] p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-[#6e7e7b]">Private notes</p>
-              <h1 className="display-font mt-2 text-4xl leading-none text-[#395156] sm:text-5xl">Quiet Notes</h1>
-            </div>
+          
 
             <div className="flex max-w-full flex-wrap items-center gap-2">
               {SIDE_OPTIONS.map((side) => (
