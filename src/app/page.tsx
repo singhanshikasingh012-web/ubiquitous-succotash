@@ -368,8 +368,8 @@ export default function Home() {
             Quiet Questions
           </div>
           <p className="mt-4 max-w-lg text-sm leading-7 text-[#5f6f6f] sm:text-base">
-            A soft, shared room for you and Aarav to leave thoughtful questions, answer them later,
-            and keep a private trail of care, curiosity, and trust.
+            A quiet place for you and Aarav to leave questions, come back later, and keep the small
+            things that matter.
           </p>
 
           <form className="mt-8 grid gap-4" onSubmit={submitRoomGate}>
@@ -457,16 +457,16 @@ export default function Home() {
 
           <div className="mt-6 grid gap-3 rounded-[2rem] border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] p-5 sm:grid-cols-3">
             <div>
-              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">First</div>
-              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Ask something gentle, strange, or honest.</p>
+              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Start</div>
+              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Ask whatever’s on your mind.</p>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Then</div>
-              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Reply when the day slows down and feels safe.</p>
+              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Reply</div>
+              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Answer when you have the time.</p>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Finally</div>
-              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Attach a photo, voice note, or tiny memory to keep.</p>
+              <div className="text-xs uppercase tracking-[0.24em] text-[#71827f]">Add</div>
+              <p className="mt-2 text-sm leading-6 text-[#455b5d]">Drop in a photo or voice note if you want.</p>
             </div>
           </div>
 
@@ -474,9 +474,9 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">Ask a new question</p>
-                <h2 className="display-font mt-1 text-3xl text-[#395156]">Leave a quiet little lantern for Aarav</h2>
+                <h2 className="display-font mt-1 text-3xl text-[#395156]">Leave a note for Aarav</h2>
               </div>
-              <div className="text-sm text-[#5f6f6f]">Saved for the room, not just this device, so the feeling stays close.</div>
+              <div className="text-sm text-[#5f6f6f]">It stays with the room, so you can pick it up later.</div>
             </div>
 
             <div className="mt-5 grid gap-4">
@@ -501,7 +501,7 @@ export default function Home() {
                   className="soft-input min-h-32 rounded-[1.5rem] px-4 py-4 text-base leading-7"
                   value={question}
                   onChange={(event) => setQuestion(event.target.value)}
-                  placeholder="What made you feel quietly proud this week?"
+                  placeholder="What stayed with you today?"
                 />
               </div>
             </div>
@@ -517,7 +517,7 @@ export default function Home() {
               disabled={savingQuestion}
               className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#4d6a6d] px-5 py-3 text-sm font-semibold text-[#fffaf3] transition hover:translate-y-[-1px] hover:bg-[#40585b] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {savingQuestion ? "Saving..." : "Add to the room"}
+              {savingQuestion ? "Saving..." : "Add note"}
             </button>
           </form>
         </section>
@@ -526,7 +526,7 @@ export default function Home() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[#71827f]">Timeline</p>
-              <h2 className="display-font mt-1 text-4xl text-[#395156]">A slow unfolding of two hearts</h2>
+              <h2 className="display-font mt-1 text-4xl text-[#395156]">What’s in the room</h2>
             </div>
             <button
               type="button"
@@ -541,7 +541,7 @@ export default function Home() {
           </div>
 
           <div className="mt-4 rounded-3xl border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] px-4 py-3 text-sm text-[#5f6f6f]">
-            {loading ? "Listening for new questions and answers..." : "Auto-refreshes every 15 seconds, like a quiet return."}
+            {loading ? "Checking for new notes..." : "Updates every 15 seconds."}
           </div>
 
           {apiMessage ? (
@@ -553,7 +553,7 @@ export default function Home() {
           <div className="mt-5 grid gap-4">
             {threads.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-[rgba(77,106,109,0.22)] bg-[rgba(255,250,243,0.65)] p-6 text-sm leading-7 text-[#61716f]">
-                There is no answer yet. Leave the first note, and let the room bloom slowly.
+                Nothing here yet. Leave the first note.
               </div>
             ) : null}
 
@@ -594,7 +594,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="mt-4 rounded-[1.5rem] border border-[rgba(77,106,109,0.14)] bg-[#fffaf3] p-4">
-                      <div className="text-sm font-medium text-[#4d6a6d]">Answer it from here, softly</div>
+                      <div className="text-sm font-medium text-[#4d6a6d]">Reply here</div>
                       <div className="mt-4 grid gap-4">
                         <div className="grid gap-2 sm:grid-cols-2">
                           <input
@@ -624,16 +624,16 @@ export default function Home() {
                               }))
                             }
                           >
-                            <option value="text">Text answer</option>
-                            <option value="photo">Photo memory</option>
-                            <option value="voice">Voice note</option>
-                            <option value="note">Mixed note</option>
+                            <option value="text">Text</option>
+                            <option value="photo">Photo</option>
+                            <option value="voice">Voice</option>
+                            <option value="note">Mixed</option>
                           </select>
                         </div>
 
                         <textarea
                           className="soft-input min-h-28 rounded-[1.5rem] px-4 py-4 text-base leading-7"
-                          placeholder="Leave an answer, a memory, or a tiny confession..."
+                          placeholder="Write back when you want to."
                           value={draft.text}
                           onChange={(event) =>
                             setDrafts((current) => ({
@@ -648,7 +648,7 @@ export default function Home() {
 
                         <div className="grid gap-2">
                           <label className="text-sm font-medium text-[#4d6a6d]" htmlFor={`attachment-${thread.id}`}>
-                            Add a picture, audio clip, or video memory
+                            Add a photo, voice note, or video
                           </label>
                           <input
                             id={`attachment-${thread.id}`}

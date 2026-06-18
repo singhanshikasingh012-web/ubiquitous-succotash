@@ -10,7 +10,11 @@ export function getSupabaseAdmin() {
     );
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  const normalizedSupabaseUrl = supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://")
+    ? supabaseUrl
+    : `https://${supabaseUrl}`;
+
+  return createClient(normalizedSupabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
   });
 }
